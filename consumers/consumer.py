@@ -33,21 +33,17 @@ class KafkaConsumer:
         self.consume_timeout = consume_timeout
         self.offset_earliest = offset_earliest
 
+        config_consumer = {
+            "bootstrap.servers": BROKER_URL,
+            "group.id": "avro_consumer",
+            "auto.offset.reset": "earliest" if offset_earliest else "latest",
+        }
+
         if is_avro is True:
-            self.consumer = AvroConsumer(
-                config={
-                    "bootstrap.servers": BROKER_URL,
-                    "schema.registry.url": SCHEMA_REGISTRY_URL,
-                    "group.id": "avro_consumer",
-                }
-            )
+            config_consumer["schema.registry.url"] = SCHEMA_REGISTRY_URL
+            self.consumer = AvroConsumer(config=config_consumer)
         else:
-            self.consumer = Consumer(
-                {
-                    "bootstrap.servers": BROKER_URL,
-                    "group.id": "regular_consumer",
-                }
-            )
+            self.consumer = Consumer(config_consumer)
 
         self.consumer.subscribe([self.topic_name_pattern], on_assign=self.on_assign)
 
